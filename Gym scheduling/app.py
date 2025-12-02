@@ -8,7 +8,7 @@ from src.api.compensar_api import CompensarAPI
 from src.scheduler.booking_scheduler import BookingScheduler
 from src.models.booking import Reserva, Tiquetera, Horario
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='frontend/dist', static_url_path='')
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 app.secret_key = os.urandom(24)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -19,18 +19,26 @@ user_sessions = {}
 
 @app.route('/')
 def index():
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login_page'))
+    return app.send_static_file('index.html')
 
-@app.route('/login_page')
-def login_page():
-    return render_template('login.html')
+@app.route('/<path:path>')
+def serve_static(path):
+    # Si existe el archivo estático, servirlo
+    if os.path.exists(os.path.join(app.static_folder, path)):
+        return app.send_static_file(path)
+    # Si no, y no es una ruta de API (que ya debería haber sido manejada por otras reglas),
+    # servir index.html para que React Router maneje la ruta
+    return app.send_static_file('index.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    # Redirige a login_page (para compatibilidad)
-    return redirect(url_for('login_page'))
+# Rutas legacy comentadas para referencia
+# @app.route('/login_page')
+# def login_page():
+#     return render_template('login.html')
+
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     # Redirige a login_page (para compatibilidad)
+#     return redirect(url_for('login_page'))
 
 @app.route('/selenium_login', methods=['POST'])
 def selenium_login():
@@ -54,17 +62,13 @@ def selenium_login():
                     'scheduler': BookingScheduler(api),
                     'reservas_pendientes': []
                 }
-                flash('¡Login exitoso!', 'success')
-                return redirect(url_for('dashboard'))
+                return jsonify({'success': True, 'message': 'Login exitoso'})
             except Exception as e:
-                flash(f'Error obteniendo datos de usuario: {str(e)}', 'error')
-                return redirect(url_for('login_page'))
+                return jsonify({'success': False, 'error': f'Error obteniendo datos de usuario: {str(e)}'}), 500
         else:
-            flash('No se pudo iniciar sesión. Intenta de nuevo.', 'error')
-            return redirect(url_for('login_page'))
+            return jsonify({'success': False, 'error': 'No se pudo iniciar sesión. Intenta de nuevo.'}), 401
     except Exception as e:
-        flash(f'Error en el proceso de login: {str(e)}', 'error')
-        return redirect(url_for('login_page'))
+        return jsonify({'success': False, 'error': f'Error en el proceso de login: {str(e)}'}), 500
 
 @app.route('/verify_session', methods=['POST'])
 def verify_session():
@@ -90,17 +94,13 @@ def verify_session():
                     'scheduler': BookingScheduler(api),
                     'reservas_pendientes': []
                 }
-                flash('¡Sesión verificada exitosamente!', 'success')
-                return redirect(url_for('dashboard'))
+                return jsonify({'success': True, 'message': 'Sesión verificada exitosamente'})
             except Exception as e:
-                flash(f'Error al obtener información del usuario: {str(e)}', 'error')
-                return redirect(url_for('login_page'))
+                return jsonify({'success': False, 'error': f'Error al obtener información del usuario: {str(e)}'}), 500
         else:
-            flash('No se detectó una sesión activa de Compensar. Por favor inicia sesión en Compensar primero.', 'error')
-            return redirect(url_for('login_page'))
+            return jsonify({'success': False, 'error': 'No se detectó una sesión activa de Compensar.'}), 401
     except Exception as e:
-        flash(f'Error al verificar la sesión: {str(e)}. Asegúrate de haber iniciado sesión en Compensar.', 'error')
-        return redirect(url_for('login_page'))
+        return jsonify({'success': False, 'error': f'Error al verificar la sesión: {str(e)}'}), 500
 
 @app.route('/logout')
 def logout():
@@ -109,29 +109,28 @@ def logout():
     if user_id and user_id in user_sessions:
         del user_sessions[user_id]
     session.clear()
-    flash('Sesión cerrada correctamente', 'info')
-    return redirect(url_for('login_page'))
+    return jsonify({'success': True, 'message': 'Sesión cerrada correctamente'})
 
-@app.route('/dashboard')
-def dashboard():
-    """Dashboard principal"""
-    if 'user_id' not in session:
-        return redirect(url_for('login_page'))
-    user_id = session['user_id']
-    if user_id not in user_sessions:
-        flash('Sesión expirada. Por favor inicia sesión nuevamente.', 'warning')
-        return redirect(url_for('login_page'))
-    api = user_sessions[user_id]['api']
-    tiqueteras = api.get_tiqueteras()
-    # Agrupar por deporte
-    deportes = {}
-    for t in tiqueteras:
-        deportes.setdefault(t.nombre_deporte, []).append(t)
-    reservas_pendientes = user_sessions[user_id]['reservas_pendientes']
-    return render_template('dashboard.html',
-                           deportes=deportes,
-                           reservas_pendientes=reservas_pendientes,
-                           user_name=session.get('document_number'))
+# @app.route('/dashboard')
+# def dashboard():
+#     """Dashboard principal"""
+#     if 'user_id' not in session:
+#         return redirect(url_for('login_page'))
+#     user_id = session['user_id']
+#     if user_id not in user_sessions:
+#         flash('Sesión expirada. Por favor inicia sesión nuevamente.', 'warning')
+#         return redirect(url_for('login_page'))
+#     api = user_sessions[user_id]['api']
+#     tiqueteras = api.get_tiqueteras()
+#     # Agrupar por deporte
+#     deportes = {}
+#     for t in tiqueteras:
+#         deportes.setdefault(t.nombre_deporte, []).append(t)
+#     reservas_pendientes = user_sessions[user_id]['reservas_pendientes']
+#     return render_template('dashboard.html',
+#                            deportes=deportes,
+#                            reservas_pendientes=reservas_pendientes,
+#                            user_name=session.get('document_number'))
 
 @app.route('/api/tiqueteras', methods=['GET'])
 def api_tiqueteras():
