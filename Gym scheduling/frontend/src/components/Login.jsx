@@ -6,6 +6,47 @@ function Login({ onLoginSuccess }) {
     const [error, setError] = useState('')
     const [useCookies, setUseCookies] = useState(false)
     const [cookieJson, setCookieJson] = useState('')
+    const [formData, setFormData] = useState({
+        document_type: 'CC',
+        document_number: '',
+        password: ''
+    })
+
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        })
+    }
+
+    const handleLogin = async (e) => {
+        e.preventDefault()
+        setLoading(true)
+        setError('')
+
+        try {
+            const response = await fetch(`${import.meta.env.BASE_URL}api/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData),
+                credentials: 'include'
+            })
+
+            const data = await response.json()
+
+            if (response.ok && data.success) {
+                onLoginSuccess()
+            } else {
+                setError(data.error || 'Error al iniciar sesión. Verifica tus credenciales.')
+            }
+        } catch (err) {
+            setError('Error de conexión. Verifica que el servidor esté corriendo.')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const handleCookieLogin = async (e) => {
         e.preventDefault()
