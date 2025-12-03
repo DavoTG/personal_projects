@@ -8,7 +8,11 @@ from src.api.compensar_api import CompensarAPI
 from src.scheduler.booking_scheduler import BookingScheduler
 from src.models.booking import Reserva, Tiquetera, Horario
 
-app = Flask(__name__, static_folder='frontend/dist', static_url_path='')
+# Calculate absolute path to static folder
+base_dir = os.path.dirname(os.path.abspath(__file__))
+static_dir = os.path.join(base_dir, 'frontend', 'dist')
+
+app = Flask(__name__, static_folder=static_dir, static_url_path='')
 CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
 app.secret_key = os.urandom(24)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -19,6 +23,19 @@ user_sessions = {}
 
 @app.route('/')
 def index():
+    if not os.path.exists(os.path.join(app.static_folder, 'index.html')):
+        # Debug info
+        debug_info = f"<h1>404 - Index not found</h1>"
+        debug_info += f"<p>Static folder: {app.static_folder}</p>"
+        if os.path.exists(app.static_folder):
+            debug_info += f"<p>Contents: {os.listdir(app.static_folder)}</p>"
+        else:
+            debug_info += f"<p>Static folder does not exist</p>"
+            # Check parent folder
+            parent = os.path.dirname(app.static_folder)
+            if os.path.exists(parent):
+                debug_info += f"<p>Parent ({parent}) contents: {os.listdir(parent)}</p>"
+        return debug_info, 404
     return app.send_static_file('index.html')
 
 @app.route('/<path:path>')
