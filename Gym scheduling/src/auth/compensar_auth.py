@@ -122,11 +122,64 @@ class CompensarAuth:
             
             return False
             
+            return False
+            
         except Exception as e:
             print(f"❌ Error durante el login: {str(e)}")
             if Config.DEBUG:
                 import traceback
                 traceback.print_exc()
+            return False
+
+    def login_with_cookies(self, cookies: dict) -> bool:
+        """
+        Inicia sesión usando cookies pre-existentes
+        
+        Args:
+            cookies: Diccionario de cookies {nombre: valor}
+        """
+        try:
+            print("🍪 Intentando login con cookies manuales...")
+            
+            # Limpiar cookies anteriores
+            self.session.cookies.clear()
+            
+            # Establecer nuevas cookies
+            for name, value in cookies.items():
+                self.session.cookies.set(name, value)
+            
+            # Configurar headers necesarios
+            self.session.headers.update({
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'application/json, text/plain, */*',
+                'Origin': 'https://sistemaplanbienestar.deportescompensar.com',
+                'Referer': 'https://sistemaplanbienestar.deportescompensar.com/'
+            })
+            
+            # Verificar si las cookies funcionan
+            print("   Verificando acceso a tiqueteras...")
+            test_response = self.session.get(
+                f"{Config.API_BASE_URL}{Config.TIQUETERAS_ENDPOINT}",
+                params={'autenticador': 'compensar'}
+            )
+            
+            print(f"   Status tiqueteras: {test_response.status_code}")
+            
+            if test_response.status_code == 200:
+                try:
+                    data = test_response.json()
+                    if data.get('tiqueteras') is not None:
+                        self.authenticated = True
+                        print("✅ Login con cookies exitoso")
+                        return True
+                except:
+                    pass
+            
+            print("❌ Las cookies no son válidas o han expirado")
+            return False
+            
+        except Exception as e:
+            print(f"❌ Error validando cookies: {str(e)}")
             return False
     
     def get_user_id(self) -> str:

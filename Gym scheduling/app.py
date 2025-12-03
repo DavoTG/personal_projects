@@ -97,6 +97,44 @@ def api_login():
     except Exception as e:
         return jsonify({'success': False, 'error': f'Error en el proceso de login: {str(e)}'}), 500
 
+@app.route('/api/login_cookies', methods=['POST'])
+def api_login_cookies():
+    """Inicia sesión usando cookies manuales"""
+    try:
+        data = request.json
+        cookies = data.get('cookies')
+
+        if not cookies:
+            return jsonify({'success': False, 'error': 'Faltan las cookies'}), 400
+
+        auth = CompensarAuth()
+        if auth.login_with_cookies(cookies):
+            # Login exitoso
+            try:
+                user_id = auth.get_user_id()
+                # Guardar en sesión
+                session['user_id'] = user_id
+                session['document_number'] = 'Sesión Manual'
+                session.permanent = True
+                
+                # Crear API con la sesión autenticada
+                api = CompensarAPI(auth.get_session())
+                
+                # Guardar objetos de API en memoria
+                user_sessions[user_id] = {
+                    'auth': auth,
+                    'api': api,
+                    'scheduler': BookingScheduler(api),
+                    'reservas_pendientes': []
+                }
+                return jsonify({'success': True, 'message': 'Login con cookies exitoso'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': f'Error obteniendo datos de usuario: {str(e)}'}), 500
+        else:
+            return jsonify({'success': False, 'error': 'Las cookies no son válidas o han expirado'}), 401
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error en el proceso de login: {str(e)}'}), 500
+
 @app.route('/verify_session', methods=['POST'])
 def verify_session():
     """Verifica si el usuario tiene una sesión activa en Compensar"""

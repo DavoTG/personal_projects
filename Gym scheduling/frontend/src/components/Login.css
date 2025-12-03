@@ -46,6 +46,66 @@
     font-size: 1.1rem;
 }
 
+.login-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.login-description {
+    color: var(--text-muted);
+    line-height: 1.6;
+    text-align: center;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-left: 0.2rem;
+}
+
+.form-group input,
+.form-group select {
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.1);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-block {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
 }
 
 .alert-error {
@@ -95,174 +155,69 @@
     border: 3px solid rgba(0, 0, 0, 0.2);
     border-top-color: #1a1a1a;
     border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
 
-    .login-container {
-        min-height: 100vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-    }
+.login-footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
 
-    .login-card {
-        background: var(--surface);
-        border-radius: 24px;
-        padding: 3rem;
-        max-width: 500px;
-        width: 100%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        border: 2px solid var(--border);
-        animation: fadeIn 0.5s ease;
-    }
+.login-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+}
 
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
+.tab-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
+.tab-btn.active {
+    background: var(--primary);
+    color: #1a1a1a;
+    box-shadow: 0 4px 12px rgba(218, 165, 32, 0.3);
+}
 
-    .login-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
+.cookie-textarea {
+    width: 100%;
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-muted);
+    font-family: monospace;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 150px;
+}
 
-    .login-header h1 {
-        color: var(--primary);
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-        font-weight: 700;
-    }
+.cookie-textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
 
-    .login-header p {
-        color: var(--text-muted);
-        font-size: 1.1rem;
-    }
-
-    .login-content {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-
-    .login-description {
-        color: var(--text-muted);
-        line-height: 1.6;
-        text-align: center;
-    }
-
-    .login-form {
-        display: flex;
-        flex-direction: column;
-        gap: 1.2rem;
-    }
-
-    .form-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        text-align: left;
-    }
-
-    .form-group label {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        font-weight: 500;
-        margin-left: 0.2rem;
-    }
-
-    .form-group input,
-    .form-group select {
-        padding: 0.8rem 1rem;
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--text);
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }
-
-    .form-group input:focus,
-    .form-group select:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.1);
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .btn-block {
-        width: 100%;
-        margin-top: 1rem;
-    }
-
-    .alert {
-        padding: 1rem;
-        border-radius: 12px;
-        font-size: 0.95rem;
-    }
-
-    .alert-error {
-        background: rgba(220, 53, 69, 0.2);
-        border: 2px solid var(--danger);
-        color: #ff6b7a;
-    }
-
-    .btn {
-        padding: 1rem 2rem;
-        border: none;
-        border-radius: 12px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .btn-primary {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        color: #1a1a1a;
-        box-shadow: 0 4px 20px rgba(218, 165, 32, 0.4);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 30px rgba(218, 165, 32, 0.5);
-    }
-
-    .btn-primary:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    .btn-large {
-        padding: 1.25rem 2.5rem;
-        font-size: 1.2rem;
-    }
-
-    .spinner-small {
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(0, 0, 0, 0.2);
-        border-top-color: #1a1a1a;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-
-    .login-footer {
-        text-align: center;
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border);
-    }
+.helper-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: -0.5rem;
+    margin-bottom: 0.5rem;
+}
