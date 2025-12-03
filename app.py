@@ -42,7 +42,11 @@ try:
     print("Gym Scheduling app mounted successfully at /gym-scheduling")
 except Exception as e:
     print(f"Error mounting Gym Scheduling app: {e}")
-    # Continue running the landing page even if the sub-app fails
+    # Define a route to show the error
+    @app.route('/gym-scheduling')
+    @app.route('/gym-scheduling/')
+    def gym_scheduling_error():
+        return f"<h1>Error mounting Gym Scheduling app</h1><pre>{e}</pre>", 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
