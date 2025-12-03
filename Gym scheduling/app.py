@@ -57,21 +57,31 @@ def serve_static(path):
 #     # Redirige a login_page (para compatibilidad)
 #     return redirect(url_for('login_page'))
 
-@app.route('/selenium_login', methods=['POST'])
-def selenium_login():
-    """Inicia sesión usando Selenium interactivo"""
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    """Inicia sesión con credenciales (sin Selenium)"""
     try:
-        auth = CompensarAuthSelenium()
-        if auth.login_interactive():
+        data = request.json
+        doc_type = data.get('document_type')
+        doc_number = data.get('document_number')
+        password = data.get('password')
+
+        if not all([doc_type, doc_number, password]):
+            return jsonify({'success': False, 'error': 'Faltan datos'}), 400
+
+        auth = CompensarAuth()
+        if auth.login(doc_type, doc_number, password):
             # Login exitoso
             try:
                 user_id = auth.get_user_id()
                 # Guardar en sesión
                 session['user_id'] = user_id
-                session['document_number'] = 'Usuario'
+                session['document_number'] = doc_number
                 session.permanent = True
-                # Crear API con la sesión autenticada de Selenium
+                
+                # Crear API con la sesión autenticada
                 api = CompensarAPI(auth.get_session())
+                
                 # Guardar objetos de API en memoria
                 user_sessions[user_id] = {
                     'auth': auth,
@@ -83,7 +93,7 @@ def selenium_login():
             except Exception as e:
                 return jsonify({'success': False, 'error': f'Error obteniendo datos de usuario: {str(e)}'}), 500
         else:
-            return jsonify({'success': False, 'error': 'No se pudo iniciar sesión. Intenta de nuevo.'}), 401
+            return jsonify({'success': False, 'error': 'Credenciales inválidas o error en Compensar'}), 401
     except Exception as e:
         return jsonify({'success': False, 'error': f'Error en el proceso de login: {str(e)}'}), 500
 

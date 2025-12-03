@@ -4,21 +4,40 @@ import './Login.css'
 function Login({ onLoginSuccess }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [formData, setFormData] = useState({
+        document_type: 'CC',
+        document_number: '',
+        password: ''
+    })
 
-    const handleLogin = async () => {
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        })
+    }
+
+    const handleLogin = async (e) => {
+        e.preventDefault()
         setLoading(true)
         setError('')
 
         try {
-            const response = await fetch(`${import.meta.env.BASE_URL}selenium_login`, {
+            const response = await fetch(`${import.meta.env.BASE_URL}api/login`, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData),
                 credentials: 'include'
             })
 
-            if (response.ok) {
+            const data = await response.json()
+
+            if (response.ok && data.success) {
                 onLoginSuccess()
             } else {
-                setError('Error al iniciar sesión. Por favor, intenta de nuevo.')
+                setError(data.error || 'Error al iniciar sesión. Verifica tus credenciales.')
             }
         } catch (err) {
             setError('Error de conexión. Verifica que el servidor esté corriendo.')
@@ -36,35 +55,72 @@ function Login({ onLoginSuccess }) {
                 </div>
 
                 <div className="login-content">
-                    <p className="login-description">
-                        Haz clic en el botón para iniciar sesión con tu cuenta de Compensar.
-                        Se abrirá una ventana del navegador donde podrás ingresar tus credenciales.
-                    </p>
-
-                    {error && (
-                        <div className="alert alert-error">
-                            {error}
+                    <form onSubmit={handleLogin} className="login-form">
+                        <div className="form-group">
+                            <label>Tipo de Documento</label>
+                            <select
+                                name="document_type"
+                                value={formData.document_type}
+                                onChange={handleChange}
+                                disabled={loading}
+                            >
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="TI">Tarjeta de Identidad</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                                <option value="PAS">Pasaporte</option>
+                            </select>
                         </div>
-                    )}
 
-                    <button
-                        className="btn btn-primary btn-large"
-                        onClick={handleLogin}
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <>
-                                <span className="spinner-small"></span>
-                                Esperando login...
-                            </>
-                        ) : (
-                            '🔐 Iniciar Sesión'
+                        <div className="form-group">
+                            <label>Número de Documento</label>
+                            <input
+                                type="text"
+                                name="document_number"
+                                value={formData.document_number}
+                                onChange={handleChange}
+                                placeholder="Ej: 1234567890"
+                                required
+                                disabled={loading}
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Contraseña</label>
+                            <input
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="Tu clave de Compensar"
+                                required
+                                disabled={loading}
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="alert alert-error">
+                                {error}
+                            </div>
                         )}
-                    </button>
+
+                        <button
+                            type="submit"
+                            className="btn btn-primary btn-large btn-block"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <span className="spinner-small"></span>
+                                    Iniciando...
+                                </>
+                            ) : (
+                                '🔐 Iniciar Sesión'
+                            )}
+                        </button>
+                    </form>
 
                     <div className="login-footer">
-                        <p>✓ Inicio de sesión seguro</p>
-                        <p>✓ Tus credenciales no se almacenan</p>
+                        <p>🔒 Tus credenciales se envían seguras a Compensar</p>
                     </div>
                 </div>
             </div>
