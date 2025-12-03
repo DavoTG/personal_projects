@@ -29,7 +29,7 @@ function ActivityCard({ tiquetera, cart, onAddToCart }) {
         setError(null)
         setHorarios([])
         try {
-            const response = await fetch('/api/horarios', {
+            const response = await fetch(`${import.meta.env.BASE_URL}api/horarios`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

@@ -16,7 +16,7 @@ function Dashboard({ onLogout }) {
 
     const loadTiqueteras = async () => {
         try {
-            const response = await fetch('/api/tiqueteras', {
+            const response = await fetch(`${import.meta.env.BASE_URL}api/tiqueteras`, {
                 credentials: 'include'
             })
             const data = await response.json()
@@ -46,7 +46,7 @@ function Dashboard({ onLogout }) {
         if (!confirm(`¿Confirmar ${cart.length} reservas?`)) return
 
         try {
-            const response = await fetch('/api/confirmar_reservas', {
+            const response = await fetch(`${import.meta.env.BASE_URL}api/confirmar_reservas`, {
                 method: 'POST',
                 credentials: 'include',
                 headers: {

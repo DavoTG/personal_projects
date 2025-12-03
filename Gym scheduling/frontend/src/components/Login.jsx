@@ -10,7 +10,7 @@ function Login({ onLoginSuccess }) {
         setError('')
 
         try {
-            const response = await fetch('/selenium_login', {
+            const response = await fetch(`${import.meta.env.BASE_URL}selenium_login`, {
                 method: 'POST',
                 credentials: 'include'
             })

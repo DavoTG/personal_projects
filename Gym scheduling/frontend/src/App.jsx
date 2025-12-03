@@ -14,7 +14,7 @@ function App() {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/tiqueteras', {
+      const response = await fetch(`${import.meta.env.BASE_URL}api/tiqueteras`, {
         credentials: 'include'
       })
       setIsAuthenticated(response.ok)
