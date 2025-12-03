@@ -26,12 +26,13 @@ class CompensarAuthSelenium:
         try:
             print("🔐 Iniciando login interactivo...")
             
-            # Configurar Chrome (CON interfaz gráfica esta vez)
+            # Configurar Chrome (Headless para Render)
             chrome_options = Options()
-            # chrome_options.add_argument('--headless')  # Comentado para que sea visible
+            chrome_options.add_argument('--headless=new')  # Necesario para servidores sin GUI
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
-            chrome_options.add_argument('--start-maximized')
+            chrome_options.add_argument('--disable-gpu')
+            chrome_options.add_argument('--window-size=1920,1080')
             
             print("   Iniciando navegador...")
             service = Service(ChromeDriverManager().install())
