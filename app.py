@@ -45,8 +45,8 @@ except Exception as e:
     # Define a route to show the error
     @app.route('/gym-scheduling')
     @app.route('/gym-scheduling/')
-    def gym_scheduling_error():
-        return f"<h1>Error mounting Gym Scheduling app</h1><pre>{e}</pre>", 500
+    def gym_scheduling_error(error=e):
+        return f"<h1>Error mounting Gym Scheduling app</h1><pre>{error}</pre>", 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

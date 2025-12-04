@@ -137,8 +137,6 @@ class CompensarAuthSelenium:
                 self.driver.quit()
             return False
 
-    def login_interactive(self) -> bool:
-    
     def _fetch_tiqueteras_data(self):
         """Obtiene los datos de tiqueteras scrapeando el HTML renderizado"""
         import json
