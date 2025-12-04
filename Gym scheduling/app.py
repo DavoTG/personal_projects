@@ -59,7 +59,7 @@ def serve_static(path):
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
-    """Inicia sesión con credenciales (sin Selenium)"""
+    """Inicia sesión con credenciales usando Selenium"""
     try:
         data = request.json
         doc_type = data.get('document_type')
@@ -69,7 +69,8 @@ def api_login():
         if not all([doc_type, doc_number, password]):
             return jsonify({'success': False, 'error': 'Faltan datos'}), 400
 
-        auth = CompensarAuth()
+        # Usar Selenium para el login
+        auth = CompensarAuthSelenium()
         if auth.login(doc_type, doc_number, password):
             # Login exitoso
             try:

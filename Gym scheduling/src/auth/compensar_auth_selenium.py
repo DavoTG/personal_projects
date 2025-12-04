@@ -18,135 +18,126 @@ class CompensarAuthSelenium:
         self.user_id = None
         self.driver = None
     
-    def login_interactive(self) -> bool:
-        """
-        Abre un navegador para que el usuario inicie sesión manualmente.
-        Monitorea las cookies hasta detectar una sesión válida.
-        """
+    def login(self, document_type: str, document_number: str, password: str) -> bool:
+        """Login automatizado con Selenium"""
         try:
-            print("🔐 Iniciando login interactivo...")
+            print("🔐 Iniciando login automatizado con Selenium...")
             
-            # Configurar Chrome (Headless para Render)
+            # Configurar Chrome Headless
             chrome_options = Options()
-            chrome_options.add_argument('--headless=new')  # Necesario para servidores sin GUI
+            chrome_options.add_argument('--headless=new')
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--window-size=1920,1080')
+            # User agent real para evitar bloqueos
+            chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             
-            print("   Iniciando navegador...")
             service = Service(ChromeDriverManager().install())
             self.driver = webdriver.Chrome(service=service, options=chrome_options)
             
-            # Navegar a la página de login
+            # 1. Navegar al login
             login_url = f"{Config.LOGIN_URL}?serviceProviderName=HER-SP&protocol=SAML"
             print(f"   Navegando a {login_url}...")
             self.driver.get(login_url)
             
-            print("   ⏳ Esperando a que el usuario inicie sesión...")
+            wait = WebDriverWait(self.driver, 20)
             
-            # Loop de espera (máximo 5 minutos)
-            start_time = time.time()
-            max_wait = 300  # 5 minutos
+            # 2. Llenar formulario
+            print("   Buscando campos del formulario...")
             
-            # Sincronizar User-Agent
-            user_agent = self.driver.execute_script("return navigator.userAgent;")
-            self.session.headers.update({'User-Agent': user_agent})
-            print(f"   ℹ️ User-Agent sincronizado: {user_agent[:50]}...")
-            
-            last_print_time = 0
-            
-            while (time.time() - start_time) < max_wait:
-                # Verificar si el navegador sigue abierto
+            # Intentar selectores comunes
+            try:
+                # Tipo de documento (puede ser un select o un custom dropdown)
+                # Intentamos buscar por nombre o ID común
                 try:
-                    current_url = self.driver.current_url
-                    # print(f"   📍 URL actual: {current_url[:60]}...")
+                    doc_type_select = wait.until(EC.presence_of_element_located((By.NAME, "documentType")))
+                    doc_type_select.send_keys(document_type)
                 except:
-                    print("   ⚠️ El navegador fue cerrado por el usuario")
+                    print("   ⚠️ No se encontró select de tipo de documento (continuando...)")
+
+                # Usuario / Documento
+                user_input = wait.until(EC.presence_of_element_located((By.ID, "username")))
+                user_input.clear()
+                user_input.send_keys(document_number)
+                
+                # Contraseña
+                pass_input = self.driver.find_element(By.ID, "password")
+                pass_input.clear()
+                pass_input.send_keys(password)
+                
+                # Botón Ingresar
+                submit_btn = self.driver.find_element(By.XPATH, "//button[contains(text(), 'Ingresar') or contains(text(), 'Iniciar')]")
+                
+                print("   Enviando credenciales...")
+                submit_btn.click()
+                
+            except Exception as e:
+                print(f"   ❌ Error interactuando con el formulario: {e}")
+                # Fallback: intentar buscar por name si ID falla
+                try:
+                    user_input = self.driver.find_element(By.NAME, "username")
+                    user_input.send_keys(document_number)
+                    pass_input = self.driver.find_element(By.NAME, "password")
+                    pass_input.send_keys(password)
+                    pass_input.submit()
+                except:
+                    print("   ❌ Falló también el fallback de selectores")
+                    print(self.driver.page_source[:1000]) # Debug
                     return False
-                
-                # Copiar cookies actuales a la sesión
-                cookies = self.driver.get_cookies()
-                
-                # Imprimir estado cada 5 segundos para no saturar
-                if time.time() - last_print_time > 5:
-                    print(f"   📍 URL: {current_url[:80]}")
-                    domains = set(c.get('domain', '') for c in cookies)
-                    print(f"   🍪 Cookies: {len(cookies)} | Dominios: {domains}")
-                    last_print_time = time.time()
-                
-                for cookie in cookies:
-                    self.session.cookies.set(cookie['name'], cookie['value'])
-                
-                # Sincronizar headers
-                self.session.headers.update({
-                    'Referer': 'https://sistemaplanbienestar.deportescompensar.com/',
-                    'Origin': 'https://sistemaplanbienestar.deportescompensar.com',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8'
-                })
 
-                # Intentar verificar autenticación con múltiples endpoints
-                endpoints_to_try = [
-                    # URL del screenshot (más probable)
-                    "https://sistemaplanbienestar.deportescompensar.com/sistema.php/entrenamiento/reserva/practica/libre",
-                    # URL provista por usuario
-                    f"{Config.API_BASE_URL}{Config.TIQUETERAS_ENDPOINT}",
-                    # Base URL
-                    "https://sistemaplanbienestar.deportescompensar.com/sistema.php",
-                    "https://sistemaplanbienestar.deportescompensar.com/"
-                ]
-
-                for check_url in endpoints_to_try:
-                    try:
-                        response = self.session.get(
-                            check_url,
-                            params={'autenticador': 'compensar'},
-                            timeout=5,
-                            allow_redirects=True
-                        )
-                        
-                        # Si devuelve 200 OK y NO es la página de login (verificar contenido)
-                        if response.status_code == 200:
-                            # Verificar que no nos redirigió al login de seguridad
-                            if "seguridad.compensar.com" not in response.url:
-                                self.authenticated = True
-                                print(f"   ✅ ¡Login detectado exitosamente en {check_url}!")
-                                print(f"   📍 Final URL: {response.url}")
-                                
-                                self.user_id = "usuario_compensar"
-                                
-                                # Antes de cerrar, intentar obtener datos de tiqueteras
-                                print("   📦 Obteniendo datos de tiqueteras desde el navegador...")
-                                self._fetch_tiqueteras_data()
-                                
-                                # Cerrar navegador
-                                self.driver.quit()
-                                self.driver = None
-                                return True
-                        
-                        elif time.time() - last_print_time < 2:
-                             print(f"   ⚠️ Falló {check_url}: {response.status_code}")
-
-                    except Exception:
-                        pass
+            # 3. Esperar redirección o éxito
+            print("   Esperando autenticación...")
+            time.sleep(5) # Espera inicial
+            
+            # Verificar URL o cookies
+            max_retries = 10
+            for _ in range(max_retries):
+                if "seguridad.compensar.com" not in self.driver.current_url:
+                    print("   ✅ Redirección detectada fuera del login")
+                    self.authenticated = True
+                    break
                 
-                # Esperar antes del siguiente intento
+                # Verificar si hay mensaje de error
+                if "usuario o contraseña incorrectos" in self.driver.page_source.lower():
+                    print("   ❌ Credenciales incorrectas reportadas por la página")
+                    return False
+                    
                 time.sleep(2)
             
-            print("   ❌ Tiempo de espera agotado")
+            if not self.authenticated:
+                print("   ⚠️ No se detectó redirección exitosa")
+                # Intentar verificar cookies de todas formas
+            
+            # 4. Copiar sesión
+            cookies = self.driver.get_cookies()
+            for cookie in cookies:
+                self.session.cookies.set(cookie['name'], cookie['value'])
+                
+            # Headers
+            self.session.headers.update({
+                'User-Agent': self.driver.execute_script("return navigator.userAgent;"),
+                'Referer': 'https://sistemaplanbienestar.deportescompensar.com/'
+            })
+            
+            # 5. Verificar acceso real
+            print("   Verificando acceso a API...")
+            if self._fetch_tiqueteras_data():
+                print("   ✅ Login Selenium exitoso y validado")
+                self.driver.quit()
+                return True
+            else:
+                print("   ❌ Login Selenium falló en validación final")
+                self.driver.quit()
+                return False
+
+        except Exception as e:
+            print(f"❌ Error crítico en login Selenium: {str(e)}")
             if self.driver:
                 self.driver.quit()
             return False
-            
-        except Exception as e:
-            print(f"❌ Error en login interactivo: {str(e)}")
-            if self.driver:
-                try:
-                    self.driver.quit()
-                except:
-                    pass
-            return False
+
+    def login_interactive(self) -> bool:
     
     def _fetch_tiqueteras_data(self):
         """Obtiene los datos de tiqueteras scrapeando el HTML renderizado"""
